@@ -1,269 +1,445 @@
-import React, { useState } from 'react';
-import { 
-  Calendar, Clock, AlertCircle, Plus, Search, 
-  RefreshCw, Check, Sparkles, Layers, X, ExternalLink
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Planner & To-Do List</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-[#E2F1FF] via-[#EBF4FF] to-[#DDF7F1] font-sans text-slate-800 antialiased">
+  
+  <div id="root"></div>
 
-const INITIAL_DATA = [
-  { id: '1', subject: 'TU121', title: 'สรุป week #2 / #6', status: 'ยังไม่เริ่ม', todoDate: '2026-10-30', time: '16:00', deadline: '', note: 'note' },
-  { id: '2', subject: 'JC262', title: 'คุยงาน #3', status: 'รอเวลานัด', todoDate: '', time: '22:00', deadline: '2026-11-03', note: 'with slide' },
-  { id: '3', subject: 'JC208', title: 'งานเดี่ยว', status: 'ยังไม่เริ่ม', todoDate: '2026-11-15', time: '22:00', deadline: '2026-11-19', note: 'note' },
-  { id: '4', subject: 'JC262', title: 'slide #3', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '2026-11-02', note: 'note' },
-  { id: '5', subject: 'AS287', title: 'คุยงานกลุ่ม', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '', note: 'note' },
-  { id: '6', subject: 'JC208', title: 'งานกลุ่ม final', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '2026-11-18', note: 'note' },
-  { id: '7', subject: 'JC262', title: 'งาน final', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '2026-11-17', note: 'note' },
-  { id: '8', subject: 'AS171', title: 'สอบพูด', status: 'รอเวลานัด', todoDate: '2026-11-02', time: 'tba', deadline: '2026-11-02', note: 'online' }
-];
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-const SUBJECT_COLORS = {
-  'TU121': 'bg-emerald-600 text-white font-extrabold',
-  'JC262': 'bg-purple-700 text-white font-extrabold',
-  'JC208': 'bg-fuchsia-700 text-white font-extrabold',
-  'AS287': 'bg-amber-600 text-white font-extrabold',
-  'AS171': 'bg-rose-600 text-white font-extrabold',
-  'DEFAULT': 'bg-blue-600 text-white font-extrabold'
-};
+    const INITIAL_DATA = [
+      { id: '1', subject: 'TU121', title: 'สรุป week #2 / #6', status: 'ยังไม่เริ่ม', todoDate: '2026-10-30', time: '16:00', deadline: '', note: 'note' },
+      { id: '2', subject: 'JC262', title: 'คุยงาน #3', status: 'รอเวลานัด', todoDate: '', time: '22:00', deadline: '2026-11-03', note: 'with slide' },
+      { id: '3', subject: 'JC208', title: 'งานเดี่ยว', status: 'ยังไม่เริ่ม', todoDate: '2026-11-15', time: '22:00', deadline: '2026-11-19', note: 'note' },
+      { id: '4', subject: 'JC262', title: 'slide #3', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '2026-11-02', note: 'note' },
+      { id: '5', subject: 'AS287', title: 'คุยงานกลุ่ม', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '', note: 'note' },
+      { id: '6', subject: 'JC208', title: 'งานกลุ่ม final', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '2026-11-18', note: 'note' },
+      { id: '7', subject: 'JC262', title: 'งาน final', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '2026-11-17', note: 'note' },
+      { id: '8', subject: 'AS171', title: 'สอบพูด', status: 'รอเวลานัด', todoDate: '2026-11-02', time: 'tba', deadline: '2026-11-02', note: 'online' }
+    ];
 
-const STATUS_COLORS = {
-  'เสร็จแล้ว': 'bg-emerald-600 text-white font-bold',
-  'รอเวลานัด': 'bg-rose-600 text-white font-bold',
-  'กำลังทำ': 'bg-amber-500 text-white font-bold',
-  'ยังไม่เริ่ม': 'bg-sky-600 text-white font-bold'
-};
+    // สีทึบแน่น สดชัด 100%
+    const SUBJECT_COLORS = {
+      'TU121': 'bg-emerald-600 text-white font-extrabold',
+      'JC262': 'bg-purple-700 text-white font-extrabold',
+      'JC208': 'bg-fuchsia-700 text-white font-extrabold',
+      'AS287': 'bg-amber-600 text-white font-extrabold',
+      'AS171': 'bg-rose-600 text-white font-extrabold',
+      'DEFAULT': 'bg-blue-600 text-white font-extrabold'
+    };
 
-export default function App() {
-  const [tasks, setTasks] = useState(INITIAL_DATA);
-  const [activeTab, setActiveTab] = useState('all');
-  const [filterSubject, setFilterSubject] = useState('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const STATUS_COLORS = {
+      'เสร็จแล้ว': 'bg-emerald-600 text-white font-bold',
+      'รอเวลานัด': 'bg-rose-600 text-white font-bold',
+      'กำลังทำ': 'bg-amber-500 text-white font-bold',
+      'ยังไม่เริ่ม': 'bg-sky-600 text-white font-bold'
+    };
 
-  const [newTask, setNewTask] = useState({
-    subject: 'TU121', title: '', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '', note: ''
-  });
+    function App() {
+      const [tasks, setTasks] = useState(() => {
+        const saved = localStorage.getItem('study_tasks');
+        return saved ? JSON.parse(saved) : INITIAL_DATA;
+      });
+      const [activeTab, setActiveTab] = useState('all');
+      const [filterSubject, setFilterSubject] = useState('ALL');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [editingTaskId, setEditingTaskId] = useState(null);
 
-  const subjects = ['ALL', ...Array.from(new Set(tasks.map(t => t.subject)))];
+      const [taskForm, setTaskForm] = useState({
+        subject: 'TU121', title: '', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '', note: ''
+      });
 
-  const handleStatusToggle = (id) => {
-    setTasks(prev => prev.map(task => {
-      if (task.id === id) {
-        const statusMap = {
-          'ยังไม่เริ่ม': 'กำลังทำ',
-          'กำลังทำ': 'เสร็จแล้ว',
-          'เสร็จแล้ว': 'ยังไม่เริ่ม',
-          'รอเวลานัด': 'เสร็จแล้ว'
-        };
-        return { ...task, status: statusMap[task.status] || 'ยังไม่เริ่ม' };
-      }
-      return task;
-    }));
-  };
+      useEffect(() => {
+        localStorage.setItem('study_tasks', JSON.stringify(tasks));
+      }, [tasks]);
 
-  const handleAddTask = (e) => {
-    e.preventDefault();
-    if (!newTask.title) return;
-    setTasks([{ ...newTask, id: Date.now().toString() }, ...tasks]);
-    setIsAddModalOpen(false);
-    setNewTask({ subject: 'TU121', title: '', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '', note: '' });
-  };
+      const subjects = ['ALL', ...Array.from(new Set(tasks.map(t => t.subject)))];
 
-  const filteredTasks = tasks.filter(task => {
-    const matchesSubject = filterSubject === 'ALL' || task.subject === filterSubject;
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          task.subject.toLowerCase().includes(searchQuery.toLowerCase());
-    if (activeTab === 'appointments') return matchesSubject && matchesSearch && (task.todoDate || task.status === 'รอเวลานัด');
-    if (activeTab === 'deadlines') return matchesSubject && matchesSearch && task.deadline;
-    return matchesSubject && matchesSearch;
-  });
+      const handleStatusToggle = (id) => {
+        setTasks(prev => prev.map(task => {
+          if (task.id === id) {
+            const statusMap = {
+              'ยังไม่เริ่ม': 'กำลังทำ',
+              'กำลังทำ': 'เสร็จแล้ว',
+              'เสร็จแล้ว': 'ยังไม่เริ่ม',
+              'รอเวลานัด': 'เสร็จแล้ว'
+            };
+            return { ...task, status: statusMap[task.status] || 'ยังไม่เริ่ม' };
+          }
+          return task;
+        }));
+      };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E2F1FF] via-[#EBF4FF] to-[#DDF7F1] font-sans text-slate-800 pb-28 relative overflow-x-hidden">
-      {/* Orbs Background */}
-      <div className="fixed -top-20 -left-20 w-80 h-80 bg-cyan-300/40 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed top-1/3 -right-20 w-96 h-96 bg-emerald-300/30 rounded-full blur-3xl pointer-events-none" />
+      const openAddModal = () => {
+        setEditingTaskId(null);
+        setTaskForm({ subject: 'TU121', title: '', status: 'ยังไม่เริ่ม', todoDate: '', time: '', deadline: '', note: '' });
+        setIsModalOpen(true);
+      };
 
-      {/* Header */}
-      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/40 border-b border-white/60 px-5 py-4">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
-              <Sparkles className="w-5 h-5 animate-pulse" />
+      const openEditModal = (task) => {
+        setEditingTaskId(task.id);
+        setTaskForm({ ...task });
+        setIsModalOpen(true);
+      };
+
+      const handleDeleteTask = (id) => {
+        if (confirm('คุณต้องการลบรายการนี้ใช่ไหม?')) {
+          setTasks(prev => prev.filter(t => t.id !== id));
+        }
+      };
+
+      const handleSaveTask = (e) => {
+        e.preventDefault();
+        if (!taskForm.title) return;
+
+        if (editingTaskId) {
+          setTasks(prev => prev.map(t => t.id === editingTaskId ? { ...taskForm, id: editingTaskId } : t));
+        } else {
+          setTasks([{ ...taskForm, id: Date.now().toString() }, ...tasks]);
+        }
+        setIsModalOpen(false);
+      };
+
+      const filteredTasks = tasks.filter(task => {
+        const matchesSubject = filterSubject === 'ALL' || task.subject === filterSubject;
+        const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              task.subject.toLowerCase().includes(searchQuery.toLowerCase());
+        if (activeTab === 'appointments') return matchesSubject && matchesSearch && (task.todoDate || task.status === 'รอเวลานัด');
+        if (activeTab === 'deadlines') return matchesSubject && matchesSearch && task.deadline;
+        return matchesSubject && matchesSearch;
+      });
+
+      const completedCount = tasks.filter(t => t.status === 'เสร็จแล้ว').length;
+      const progressPercent = Math.round((completedCount / (tasks.length || 1)) * 100);
+
+      return (
+        <div className="min-h-screen pb-28 relative overflow-x-hidden">
+          {/* Background Orbs */}
+          <div className="fixed -top-20 -left-20 w-80 h-80 bg-cyan-300/40 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="fixed top-1/3 -right-20 w-96 h-96 bg-emerald-300/30 rounded-full blur-3xl pointer-events-none"></div>
+
+          {/* Header */}
+          <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/40 border-b border-white/60 px-5 py-4">
+            <div className="max-w-md mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
+                  <span className="text-xl">✨</span>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-teal-900 bg-clip-text text-transparent">
+                    Study Planner
+                  </h1>
+                  <p className="text-xs font-medium text-slate-500">
+                    {completedCount}/{tasks.length} งานที่ทำเสร็จแล้ว
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-teal-900 bg-clip-text text-transparent">
-                Study Planner
-              </h1>
-              <p className="text-xs font-medium text-slate-500">
-                {tasks.filter(t => t.status === 'เสร็จแล้ว').length}/{tasks.length} งานที่ทำเสร็จแล้ว
-              </p>
+          </header>
+
+          {/* Main Content */}
+          <main className="max-w-md mx-auto px-4 pt-5 space-y-5">
+            {/* Progress Card */}
+            <div className="rounded-3xl p-5 bg-white/50 border border-white/80 shadow-xl backdrop-blur-2xl">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <span className="text-[11px] uppercase tracking-wider font-bold text-blue-600 bg-blue-500/10 px-2.5 py-1 rounded-full">Dashboard</span>
+                  <h2 className="text-lg font-bold text-slate-800 mt-2">ภาพรวมตารางเรียน</h2>
+                </div>
+                <span className="text-2xl font-extrabold text-blue-600">{progressPercent}%</span>
+              </div>
+
+              <div className="w-full h-3 bg-slate-200/60 rounded-full overflow-hidden p-0.5">
+                <div 
+                  className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
+              </div>
+
+              <div className="mt-4 relative">
+                <input 
+                  type="text"
+                  placeholder="ค้นหาวิชา, ชื่องาน..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-4 pr-4 py-2.5 rounded-2xl bg-white/60 border border-white/80 text-sm focus:outline-none backdrop-blur-md"
+                />
+              </div>
             </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-md mx-auto px-4 pt-5 space-y-5">
-        {/* Progress Card */}
-        <div className="rounded-3xl p-5 bg-white/50 border border-white/80 shadow-xl backdrop-blur-2xl">
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <span className="text-[11px] uppercase tracking-wider font-bold text-blue-600 bg-blue-500/10 px-2.5 py-1 rounded-full">Dashboard</span>
-              <h2 className="text-lg font-bold text-slate-800 mt-2">ภาพรวมตารางเรียน</h2>
+            {/* Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {subjects.map(subj => (
+                <button
+                  key={subj}
+                  onClick={() => setFilterSubject(subj)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap backdrop-blur-md ${
+                    filterSubject === subj 
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105' 
+                      : 'bg-white/50 text-slate-600 hover:bg-white/80'
+                  }`}
+                >
+                  {subj === 'ALL' ? 'ทั้งหมด' : subj}
+                </button>
+              ))}
             </div>
-            <span className="text-2xl font-extrabold text-blue-600">
-              {Math.round((tasks.filter(t => t.status === 'เสร็จแล้ว').length / (tasks.length || 1)) * 100)}%
-            </span>
-          </div>
 
-          <div className="w-full h-3 bg-slate-200/60 rounded-full overflow-hidden p-0.5">
-            <div 
-              className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-              style={{ width: `${(tasks.filter(t => t.status === 'เสร็จแล้ว').length / (tasks.length || 1)) * 100}%` }}
-            />
-          </div>
+            {/* Task List */}
+            <div className="space-y-3.5">
+              {filteredTasks.map((task) => {
+                const subjectColor = SUBJECT_COLORS[task.subject] || SUBJECT_COLORS['DEFAULT'];
+                const statusColor = STATUS_COLORS[task.status] || STATUS_COLORS['ยังไม่เริ่ม'];
+                const isDone = task.status === 'เสร็จแล้ว';
 
-          <div className="mt-4 relative">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="ค้นหาวิชา, ชื่องาน..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/60 border border-white/80 text-sm focus:outline-none backdrop-blur-md"
-            />
-          </div>
-        </div>
+                return (
+                  <div 
+                    key={task.id}
+                    className={`rounded-3xl p-4 transition-all duration-300 border backdrop-blur-2xl shadow-lg ${
+                      isDone ? 'bg-white/30 border-white/40 opacity-60' : 'bg-white/70 border-white/90 hover:shadow-xl'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 space-y-2">
+                        {/* Solid Vivid Badges */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-xs px-3 py-1 rounded-full ${subjectColor}`}>
+                            {task.subject}
+                          </span>
+                          <span className={`text-xs px-3 py-1 rounded-full ${statusColor}`}>
+                            {task.status}
+                          </span>
+                        </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {subjects.map(subj => (
+                        <h3 className={`text-base font-bold text-slate-800 ${isDone ? 'line-through text-slate-400' : ''}`}>
+                          {task.title}
+                        </h3>
+
+                        <div className="flex items-center gap-2 pt-1 text-xs text-slate-600 flex-wrap">
+                          {task.todoDate && (
+                            <div className="flex items-center gap-1 bg-white/60 px-2.5 py-1 rounded-xl">
+                              <span className="text-blue-600 font-bold">📅</span>
+                              <span>{task.todoDate}</span>
+                            </div>
+                          )}
+                          {task.time && (
+                            <div className="flex items-center gap-1 bg-white/60 px-2.5 py-1 rounded-xl">
+                              <span className="text-amber-600 font-bold">⏰</span>
+                              <span>{task.time}</span>
+                            </div>
+                          )}
+                          {task.deadline && (
+                            <div className="flex items-center gap-1 bg-rose-500 text-white font-bold px-2.5 py-1 rounded-xl">
+                              <span>🚨 ส่ง: {task.deadline}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {task.note && task.note !== 'note' && (
+                          <p className="text-xs text-slate-500 italic pl-1 border-l-2 border-blue-400">
+                            "{task.note}"
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Right Action Buttons */}
+                      <div className="flex flex-col gap-2 items-center">
+                        {/* Check status button */}
+                        <button
+                          onClick={() => handleStatusToggle(task.id)}
+                          className={`w-9 h-9 rounded-2xl flex items-center justify-center transition-all border shadow-sm ${
+                            isDone
+                              ? 'bg-emerald-500 text-white border-emerald-400'
+                              : 'bg-white/80 text-slate-300 hover:text-slate-500 border-white'
+                          }`}
+                        >
+                          ✓
+                        </button>
+
+                        {/* Edit & Delete Action Row */}
+                        <div className="flex items-center gap-1 pt-1">
+                          <button
+                            onClick={() => openEditModal(task)}
+                            className="p-1.5 rounded-xl bg-white/80 hover:bg-white text-slate-600 hover:text-blue-600 border border-white text-xs shadow-sm transition"
+                            title="แก้ไข"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="p-1.5 rounded-xl bg-white/80 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-white text-xs shadow-sm transition"
+                            title="ลบ"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </main>
+
+          {/* Add Floating Button */}
+          <button
+            onClick={openAddModal}
+            className="fixed bottom-24 right-5 z-30 w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-600 text-white flex items-center justify-center text-2xl shadow-xl shadow-blue-500/40 border border-white/60 hover:scale-105 active:scale-95 transition"
+          >
+            +
+          </button>
+
+          {/* Bottom Navigation */}
+          <nav className="fixed bottom-4 inset-x-4 max-w-md mx-auto z-30 bg-white/60 backdrop-blur-2xl border border-white/80 rounded-3xl shadow-2xl p-2 flex items-center justify-around">
             <button
-              key={subj}
-              onClick={() => setFilterSubject(subj)}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap backdrop-blur-md ${
-                filterSubject === subj 
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105' 
-                  : 'bg-white/50 text-slate-600 hover:bg-white/80'
+              onClick={() => setActiveTab('all')}
+              className={`flex flex-col items-center gap-0.5 py-1.5 px-5 rounded-2xl transition ${
+                activeTab === 'all' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'
               }`}
             >
-              {subj === 'ALL' ? 'ทั้งหมด' : subj}
+              <span className="text-base">📋</span>
+              <span className="text-[10px] font-bold">ทั้งหมด</span>
             </button>
-          ))}
-        </div>
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={`flex flex-col items-center gap-0.5 py-1.5 px-5 rounded-2xl transition ${
+                activeTab === 'appointments' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'
+              }`}
+            >
+              <span className="text-base">📅</span>
+              <span className="text-[10px] font-bold">ทำนัด</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('deadlines')}
+              className={`flex flex-col items-center gap-0.5 py-1.5 px-5 rounded-2xl transition ${
+                activeTab === 'deadlines' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'
+              }`}
+            >
+              <span className="text-base">🚨</span>
+              <span className="text-[10px] font-bold">เดดไลน์</span>
+            </button>
+          </nav>
 
-        {/* Task Cards List */}
-        <div className="space-y-3.5">
-          {filteredTasks.map((task) => {
-            const subjectColor = SUBJECT_COLORS[task.subject] || SUBJECT_COLORS['DEFAULT'];
-            const statusColor = STATUS_COLORS[task.status] || STATUS_COLORS['ยังไม่เริ่ม'];
-            const isDone = task.status === 'เสร็จแล้ว';
+          {/* Modal เพิ่ม / แก้ไข รายการ */}
+          {isModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/30 backdrop-blur-md">
+              <div className="w-full max-w-md rounded-3xl bg-white/95 backdrop-blur-2xl border border-white p-6 shadow-2xl space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                  <h3 className="text-lg font-bold text-slate-800">
+                    {editingTaskId ? '✏️ แก้ไขรายการ' : '➕ เพิ่มรายการใหม่'}
+                  </h3>
+                  <button onClick={() => setIsModalOpen(false)} className="p-1 rounded-full bg-slate-100 text-slate-500">✕</button>
+                </div>
 
-            return (
-              <div 
-                key={task.id}
-                className={`rounded-3xl p-4 transition-all duration-300 border backdrop-blur-2xl shadow-lg ${
-                  isDone ? 'bg-white/30 border-white/40 opacity-60' : 'bg-white/70 border-white/90 hover:shadow-xl'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 space-y-2">
-                    {/* Solid Vivid Badges */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-xs font-extrabold px-3 py-1 rounded-full shadow-md ${subjectColor}`}>
-                        {task.subject}
-                      </span>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full shadow-md ${statusColor}`}>
-                        {task.status}
-                      </span>
+                <form onSubmit={handleSaveTask} className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 mb-1 block">รหัสวิชา</label>
+                    <input 
+                      type="text" 
+                      value={taskForm.subject}
+                      onChange={(e) => setTaskForm({...taskForm, subject: e.target.value.toUpperCase()})}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 mb-1 block">หัวข้องาน</label>
+                    <input 
+                      type="text" 
+                      value={taskForm.title}
+                      onChange={(e) => setTaskForm({...taskForm, title: e.target.value})}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 mb-1 block">สถานะ</label>
+                    <select
+                      value={taskForm.status}
+                      onChange={(e) => setTaskForm({...taskForm, status: e.target.value})}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"
+                    >
+                      <option value="ยังไม่เริ่ม">ยังไม่เริ่ม</option>
+                      <option value="กำลังทำ">กำลังทำ</option>
+                      <option value="รอเวลานัด">รอเวลานัด</option>
+                      <option value="เสร็จแล้ว">เสร็จแล้ว</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 mb-1 block">วันที่ทำนัด</label>
+                      <input 
+                        type="date" 
+                        value={taskForm.todoDate}
+                        onChange={(e) => setTaskForm({...taskForm, todoDate: e.target.value})}
+                        className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"
+                      />
                     </div>
-
-                    <h3 className={`text-base font-bold text-slate-800 ${isDone ? 'line-through text-slate-400' : ''}`}>
-                      {task.title}
-                    </h3>
-
-                    <div className="flex items-center gap-2 pt-1 text-xs text-slate-600 flex-wrap">
-                      {task.todoDate && (
-                        <div className="flex items-center gap-1 bg-white/60 px-2.5 py-1 rounded-xl">
-                          <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                          <span>{task.todoDate}</span>
-                        </div>
-                      )}
-                      {task.time && (
-                        <div className="flex items-center gap-1 bg-white/60 px-2.5 py-1 rounded-xl">
-                          <Clock className="w-3.5 h-3.5 text-amber-600" />
-                          <span>{task.time}</span>
-                        </div>
-                      )}
-                      {task.deadline && (
-                        <div className="flex items-center gap-1 bg-rose-500 text-white font-bold px-2.5 py-1 rounded-xl shadow-sm">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          <span>ส่ง: {task.deadline}</span>
-                        </div>
-                      )}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 mb-1 block">เวลา</label>
+                      <input 
+                        type="text" 
+                        placeholder="เช่น 16:00"
+                        value={taskForm.time}
+                        onChange={(e) => setTaskForm({...taskForm, time: e.target.value})}
+                        className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"
+                      />
                     </div>
+                  </div>
 
-                    {task.note && task.note !== 'note' && (
-                      <p className="text-xs text-slate-500 italic pl-1 border-l-2 border-blue-400">
-                        "{task.note}"
-                      </p>
-                    )}
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 mb-1 block">เดดไลน์</label>
+                    <input 
+                      type="date" 
+                      value={taskForm.deadline}
+                      onChange={(e) => setTaskForm({...taskForm, deadline: e.target.value})}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 mb-1 block">บันทึกเพิ่มเติม (Note)</label>
+                    <input 
+                      type="text" 
+                      value={taskForm.note}
+                      onChange={(e) => setTaskForm({...taskForm, note: e.target.value})}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"
+                    />
                   </div>
 
                   <button
-                    onClick={() => handleStatusToggle(task.id)}
-                    className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border shadow-md ${
-                      isDone
-                        ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/30'
-                        : 'bg-white/80 text-slate-300 hover:text-slate-500 border-white'
-                    }`}
+                    type="submit"
+                    className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-500/30 hover:opacity-95 transition mt-2"
                   >
-                    <Check className="w-6 h-6 stroke-[3]" />
+                    {editingTaskId ? 'บันทึกการแก้ไข' : 'เพิ่มงาน'}
                   </button>
-                </div>
+                </form>
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
-      </main>
+      );
+    }
 
-      {/* Floating Plus Button */}
-      <button
-        onClick={() => setIsAddModalOpen(true)}
-        className="fixed bottom-24 right-5 z-30 w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-xl shadow-blue-500/40 border border-white/60 hover:scale-105 active:scale-95 transition"
-      >
-        <Plus className="w-7 h-7 stroke-[2.5]" />
-      </button>
-
-      {/* Bottom iOS Navigation */}
-      <nav className="fixed bottom-4 inset-x-4 max-w-md mx-auto z-30 bg-white/60 backdrop-blur-2xl border border-white/80 rounded-3xl shadow-2xl p-2 flex items-center justify-around">
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-5 rounded-2xl transition ${
-            activeTab === 'all' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'
-          }`}
-        >
-          <Layers className="w-5 h-5" />
-          <span className="text-[10px] font-bold">ทั้งหมด</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('appointments')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-5 rounded-2xl transition ${
-            activeTab === 'appointments' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'
-          }`}
-        >
-          <Calendar className="w-5 h-5" />
-          <span className="text-[10px] font-bold">ทำนัด</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('deadlines')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-5 rounded-2xl transition ${
-            activeTab === 'deadlines' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'
-          }`}
-        >
-          <AlertCircle className="w-5 h-5" />
-          <span className="text-[10px] font-bold">เดดไลน์</span>
-        </button>
-      </nav>
-    </div>
-  );
-}
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
